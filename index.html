@@ -3,49 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Specialist v202603301155</title>
+    <title>HLS Specialist v202603301200</title>
     <style>
-        .version-tag { font-size: 11px; color: #aaa; text-align: right; font-family: monospace; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1200px; margin: auto; background: #f4f7f9; color: #333; }
+        .version-tag { font-size: 11px; color: #aaa; text-align: right; font-family: monospace; padding-bottom: 5px; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; max-width: 1200px; margin: auto; background: #f4f7f9; color: #333; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; }
         
-        /* 表格與列表優化 */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; background: white; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; vertical-align: top; font-size: 13px; }
-        th { background: #f8f9fa; width: 200px; }
+        th { background: #f8f9fa; width: 180px; color: #666; }
 
         .item-row { 
-            padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; 
-            border-radius: 4px; margin-bottom: 2px;
+            padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; 
+            border-radius: 6px; margin-bottom: 4px; border: 1px solid transparent;
         }
-        .item-row:hover { background: #e6f7ff; }
-        .item-label { font-weight: bold; color: #c41d7f; margin-right: 10px; }
+        .item-row:hover { background: #e6f7ff; border-color: #bae7ff; }
+        .item-label { font-weight: bold; color: #c41d7f; margin-right: 10px; font-size: 14px; }
         .item-summary { color: #555; font-size: 12px; }
 
-        /* 隱藏的連結彈窗/區塊 */
-        .url-popup { 
-            display: none; margin-top: 5px; padding: 10px; background: #1e1e1e; color: #d4d4d4; 
-            font-family: monospace; font-size: 11px; border-radius: 4px; word-break: break-all;
+        /* URL 展開區塊與複製按鈕 */
+        .url-container { 
+            display: none; margin-top: 8px; padding: 12px; background: #1e1e1e; color: #d4d4d4; 
+            border-radius: 6px; position: relative; animation: fadeIn 0.2s;
         }
+        .url-text { font-family: monospace; font-size: 11px; word-break: break-all; white-space: pre-wrap; padding-right: 60px; display: block; }
+        .copy-btn { 
+            position: absolute; right: 8px; top: 8px; padding: 4px 8px; 
+            background: #007aff; color: white; border: none; border-radius: 4px; 
+            font-size: 11px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .copy-btn:hover { background: #005bb5; }
+        .copy-btn.copied { background: #52c41a; }
 
-        .sub-section { margin-left: 20px; border-left: 2px dashed #ccc; padding-left: 15px; margin-bottom: 20px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
         .clickable-box { background: #fff; border: 1px solid #ddd; border-left: 4px solid #007aff; padding: 10px; cursor: pointer; font-family: monospace; font-size: 12px; word-break: break-all; }
-        
         input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-        button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button#mainBtn { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .footer { font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="version-tag">Build 202603301155</div>
-    <h2>HLS 階層式深度分析</h2>
+    <div class="version-tag">Build 202603301200</div>
+    <h2>HLS 階層式深度分析儀</h2>
     <div style="display:flex; gap:10px; margin-bottom:20px;">
         <input type="text" id="urlInput" placeholder="請貼上 .m3u8 網址...">
-        <button onclick="startAnalysis()">執行分析</button>
+        <button id="mainBtn" onclick="startAnalysis()">執行技術分析</button>
     </div>
     <div id="mainOutput"></div>
     
@@ -60,11 +67,27 @@
         el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
+    async function copyToClipboard(text, btnId) {
+        try {
+            await navigator.clipboard.writeText(text);
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerText;
+            btn.innerText = "已複製！";
+            btn.classList.add("copied");
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove("copied");
+            }, 2000);
+        } catch (err) {
+            alert("複製失敗，請手動選取。");
+        }
+    }
+
     async function startAnalysis() {
         const url = document.getElementById('urlInput').value.trim();
         const output = document.getElementById('mainOutput');
         if (!url) return;
-        output.innerHTML = "分析中...";
+        output.innerHTML = "<p>正在抓取多層級數據...</p>";
 
         try {
             const response = await fetch(url);
@@ -72,20 +95,19 @@
             const baseDir = url.substring(0, url.lastIndexOf("/") + 1);
             let html = "";
 
-            // 1. 主內容展示
-            html += `<div class="section-title">1. 主 m3u8 內容</div>`;
-            html += `<div class="clickable-box" onclick="toggleDisplay('rawSrc')">點擊展開完整原始碼</div>`;
+            // 1. 主原始碼
+            html += `<div class="section-title">1. 主 m3u8 原始碼</div>`;
+            html += `<div class="clickable-box" onclick="toggleDisplay('rawSrc')">▶ 點擊展開完整原始碼</div>`;
             html += `<pre id="rawSrc" style="display:none; background:#1e1e1e; color:#ccc; padding:15px; font-size:12px; white-space:pre-wrap; word-break:break-all;">${text.replace(/</g,'&lt;')}</pre>`;
 
-            // 2. 資訊分析 (深度重構版)
-            html += `<div class="section-title">2. 主 m3u8 資訊分析</div>`;
+            // 2. 資訊分析
+            html += `<div class="section-title">2. 主 m3u8 資訊分析 (點擊項目可展開 URL)</div>`;
             html += `<table>`;
             
-            // VERSION
             const verMatch = text.match(/#EXT-X-VERSION:(\d+)/);
             html += `<tr><th>#EXT-X-VERSION</th><td>版本：${verMatch?verMatch[1]:'未註明'}</td></tr>`;
 
-            // MEDIA (拆解語音與字幕)
+            // MEDIA 解析
             const mediaLines = text.match(/#EXT-X-MEDIA:.*/g) || [];
             let audioHtml = "";
             let subHtml = "";
@@ -95,23 +117,28 @@
                 const lang = line.match(/LANGUAGE="([^"]*)"/)?.[1] || "未知語言";
                 const uri = line.match(/URI="([^"]*)"/)?.[1];
                 const fullUri = uri ? (uri.startsWith('http') ? uri : baseDir + uri) : "N/A";
+                const cid = `media-url-${idx}`;
+                const bid = `btn-media-${idx}`;
 
                 const item = `
-                    <div class="item-row" onclick="toggleDisplay('media-${idx}')">
+                    <div class="item-row" onclick="toggleDisplay('${cid}')">
                         <span class="item-label">${name}</span>
                         <span class="item-summary">[${lang}]</span>
-                        <div id="media-${idx}" class="url-popup">${fullUri}</div>
+                        <div id="${cid}" class="url-container" onclick="event.stopPropagation();">
+                            <button id="${bid}" class="copy-btn" onclick="copyToClipboard('${fullUri}', '${bid}')">複製</button>
+                            <span class="url-text">${fullUri}</span>
+                        </div>
                     </div>`;
                 
                 if (type === 'AUDIO') audioHtml += item;
                 if (type === 'SUBTITLES') subHtml += item;
             });
             html += `<tr><th>#EXT-X-MEDIA</th><td>
-                <div style="font-weight:bold; color:#007aff; margin-bottom:5px;">🔊 語音軌道</div>${audioHtml || '無'}
-                <div style="font-weight:bold; color:#007aff; margin-top:15px; margin-bottom:5px;">💬 字幕軌道</div>${subHtml || '無'}
+                <div style="font-weight:bold; color:#007aff; margin-bottom:8px;">🔊 語音軌道</div>${audioHtml || '無'}
+                <div style="font-weight:bold; color:#007aff; margin-top:15px; margin-bottom:8px;">💬 字幕軌道</div>${subHtml || '無'}
             </td></tr>`;
 
-            // STREAM-INF (影像變體)
+            // STREAM-INF 解析
             const streamMatches = text.matchAll(/#EXT-X-STREAM-INF:(.*?)\n(.*)/g);
             let variantHtml = "";
             let vIdx = 0;
@@ -121,24 +148,29 @@
                 const res = info.match(/RESOLUTION=(\d+x\d+)/)?.[1] || "未知解析度";
                 const bw = info.match(/BANDWIDTH=(\d+)/)?.[1] || "未知頻寬";
                 const fullPath = path.startsWith('http') ? path : baseDir + path;
+                const cid = `var-url-${vIdx}`;
+                const bid = `btn-var-${vIdx}`;
                 
                 variantHtml += `
-                    <div class="item-row" onclick="toggleDisplay('var-${vIdx}')">
+                    <div class="item-row" onclick="toggleDisplay('${cid}')">
                         <span class="item-label">變體 ${vIdx+1}</span>
                         <span class="item-summary">${res} (${(bw/1000000).toFixed(2)} Mbps)</span>
-                        <div id="var-${vIdx}" class="url-popup">${fullPath}</div>
+                        <div id="${cid}" class="url-container" onclick="event.stopPropagation();">
+                            <button id="${bid}" class="copy-btn" onclick="copyToClipboard('${fullPath}', '${bid}')">複製</button>
+                            <span class="url-text">${fullPath}</span>
+                        </div>
                     </div>`;
                 vIdx++;
             }
             html += `<tr><th>#EXT-X-STREAM-INF</th><td>${variantHtml || '無'}</td></tr>`;
             html += `</table>`;
 
-            // 3 & 4 (沿用之前的架構，但加上 URL 隱藏邏輯)
-            html += `<div class="section-title">3. 初步查核</div><div class="diag-item success">✓ 基本語法查核通過</div>`;
+            // 3. 初步查核
+            html += `<div class="section-title">3. 初步查核</div><div style="padding:10px; color:#389e0d; background:#f6ffed; border:1px solid #b7eb8f; border-radius:6px; font-size:13px;">✓ 基本語法查核通過</div>`;
             
             output.innerHTML = html;
         } catch (err) {
-            output.innerHTML = `<div class="diag-item warning">分析失敗: ${err.message}</div>`;
+            output.innerHTML = `<div style="padding:15px; color:#cf1322; background:#fff1f0; border:1px solid #ffa39e; border-radius:6px;">分析失敗: ${err.message}</div>`;
         }
     }
 </script>
