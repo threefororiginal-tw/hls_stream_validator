@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HLS Professional Inspector</title>
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="card">
-    <div class="version-tag">Build 202603301330</div>
-    <h2>HLS分析師</h2>
+    <div id="versionTag" class="version-tag">載入版號中...</div>
+    <h2>HLS 階層式深度分析儀</h2>
     
     <div class="controls">
         <select id="historySelect">
@@ -19,7 +19,7 @@
         
         <div class="input-group">
             <input type="text" id="urlInput" placeholder="請貼上 Master 或 Media .m3u8 網址...">
-            <button id="mainBtn">執行分析</button>
+            <button id="mainBtn">執行技術分析</button>
         </div>
     </div>
 
@@ -35,6 +35,6 @@
     </div>
 </div>
 
-<script type="module" src="./js/main.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
