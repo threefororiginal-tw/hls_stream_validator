@@ -3,41 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Stream Analyzer</title>
+    <title>HLS Master/Media Inspector</title>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 900px; margin: auto; background: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1000px; margin: auto; background: #f4f7f9; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .report-item { padding: 12px; margin-bottom: 8px; border-radius: 6px; border-left: 5px solid #ccc; font-size: 14px; }
-        .success { background: #f6ffed; border-color: #52c41a; color: #389e0d; }
-        .error { background: #fff1f0; border-color: #ff4d4f; color: #cf1322; }
+        
+        /* 區塊樣式 */
+        .section-title { border-bottom: 2px solid #007aff; padding-bottom: 5px; margin-top: 25px; color: #005bb5; }
+        pre { background: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px; max-height: 300px; }
+        
+        .url-box { background: #eef2f7; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; word-break: break-all; margin-bottom: 5px; border-left: 4px solid #007aff; }
+        .diagnostic-item { padding: 10px; margin: 8px 0; border-radius: 6px; font-size: 14px; }
+        .error { background: #fff1f0; border: 1px solid #ff4d4f; color: #cf1322; }
+        .warning { background: #fffbe6; border: 1px solid #faad14; color: #856404; }
+        .success { background: #f6ffed; border: 1px solid #52c41a; color: #389e0d; }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <h2>Professional HLS Spec Checker</h2>
+        <h2>HLS 深度技術分析儀</h2>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="urlInput" placeholder="貼上 .m3u8 網址進行分析...">
-            <button onclick="startAnalysis()">開始分析</button>
+            <input type="text" id="urlInput" placeholder="請輸入 Master 或 Media .m3u8 網址...">
+            <button onclick="startDeepAnalysis()">執行深度分析</button>
         </div>
-        <div id="status" style="margin-top:20px;"></div>
+        
+        <div id="loading" style="display:none; margin-top:20px;">分析中，請稍候...</div>
+        
+        <div id="mainOutput"></div>
     </div>
+
     <script>
-        async function startAnalysis() {
-            const url = document.getElementById('urlInput').value;
-            const status = document.getElementById('status');
-            if (!url) return alert("請輸入網址！");
-            status.innerHTML = "正在分析中...";
+        async function startDeepAnalysis() {
+            const baseUrl = document.getElementById('urlInput').value;
+            const output = document.getElementById('mainOutput');
+            if (!baseUrl) return alert("請輸入網址");
+
+            output.innerHTML = "正在載入數據...";
+            
             try {
-                const response = await fetch(url);
+                const response = await fetch(baseUrl);
                 const text = await response.text();
-                let reports = "<h3>分析報告：</h3>";
-                if (text.includes("#EXTM3U")) reports += '<div class="report-item success">✓ 偵測到標準 HLS (#EXTM3U)</div>';
-                else reports += '<div class="report-item error">✗ 非標準 HLS 格式</div>';
-                status.innerHTML = reports;
+                const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf("/") + 1);
+
+                let html = "";
+
+                // 1. 印出原始 m3u8 內容
+                html += `<h3 class="section-title">1. 原始 Manifest 內容</h3><pre>${text.substring(0, 2000)}${text.length > 2000 ? '\n...(下略)' : ''}</pre>`;
+
+                // 2. & 3. 組出 URL 並分析資訊
+                html += `<h3 class="section-title">2. & 3. 資源路徑與資訊分析</h3>`;
+                
+                let diagnostics = [];
+                
+                // 檢查是否為 Master Playlist
+                if (text.includes("#EXT-X-STREAM-INF")) {
+                    html += "<h4>[Video Variants]</h4>";
+                    const videoMatches = text.matchAll(/#EXT-X-STREAM-INF:(.*)\n(.*)/g);
+                    for (const match of videoMatches) {
+                        const info = match[1];
+                        const relPath = match[2].trim();
+                        const fullUrl = relPath.startsWith('http') ? relPath : baseDir + relPath;
+                        
+                        html += `<div class="url-box"><b>Video:</b> ${fullUrl}<br><small>${info}</small></div>`;
+                        
+                        // 診斷檢查
+                        if (!info.includes("CODECS")) diagnostics.push({type:'error', msg: `Video 層級缺少 CODECS 參數：${relPath}`});
+                        if (!info.includes("RESOLUTION")) diagnostics.push({type:'warning', msg: `建議加入 RESOLUTION 參數以利 iOS 選擇：${relPath}`});
+                    }
+
+                    // 檢查獨立 Audio
+                    if (text.includes("#EXT-X-MEDIA:TYPE=AUDIO")) {
+                        html += "<h4>[Audio Tracks]</h4>";
+                        const audioMatches = text.matchAll(/#EXT-X-MEDIA:TYPE=AUDIO.*?URI="(.*?)"/g);
+                        for (const match of audioMatches) {
+                            const relPath = match[1];
+                            const fullUrl = relPath.startsWith('http') ? relPath : baseDir + relPath;
+                            html += `<div class="url-box"><b>Audio:</b> ${fullUrl}</div>`;
+                        }
+                    }
+                } else if (text.includes("#EXTINF")) {
+                    html += "<h4>[Media Segments]</h4>";
+                    const segMatches = text.matchAll(/#EXTINF:.*?\n(.*)/g);
+                    let count = 0;
+                    for (const match of segMatches) {
+                        if(count++ < 5) { // 只列出前5個避免版面過長
+                            const relPath = match[1].trim();
+                            const fullUrl = relPath.startsWith('http') ? relPath : baseDir + relPath;
+                            html += `<div class="url-box"><b>TS/fMP4:</b> ${fullUrl}</div>`;
+                        }
+                    }
+                    html += `<p>...共有 ${count} 個切片</p>`;
+                    
+                    if (!text.includes("#EXT-X-TARGETDURATION")) diagnostics.push({type:'error', msg: "Media Playlist 缺少必要標籤 #EXT-X-TARGETDURATION"});
+                }
+
+                // 4. 指出有問題的地方
+                html += `<h3 class="section-title">4. 診斷報告 (Diagnostic)</h3>`;
+                if (diagnostics.length === 0) {
+                    html += `<div class="diagnostic-item success">✓ 尚未偵測到嚴重規格問題 (符合 Apple 基本規範)</div>`;
+                } else {
+                    diagnostics.forEach(d => {
+                        html += `<div class="diagnostic-item ${d.type}"><b>${d.type.toUpperCase()}:</b> ${d.msg}</div>`;
+                    });
+                }
+
+                output.innerHTML = html;
+
             } catch (err) {
-                status.innerHTML = '<div class="report-item error"><b>無法分析！可能是 CORS 阻擋。</b><br>請確認串流伺服器已開啟 CORS。</div>';
+                output.innerHTML = `<div class="diagnostic-item error">分析失敗：${err.message}<br>請確認網址正確且串流伺服器已開啟 <b>CORS</b>。</div>`;
             }
         }
     </script>
