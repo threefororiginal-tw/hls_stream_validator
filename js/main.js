@@ -1,22 +1,43 @@
 import { getHistory, saveToHistory } from './history.js';
 import { fetchAndAnalyze } from './parser.js';
 
+// --- 自動產生發佈時間版號 ---
+function autoSetVersion() {
+    const versionTag = document.getElementById('versionTag');
+    if (!versionTag) return;
+
+    // 取得瀏覽器讀取到此 HTML 檔案的最後修改時間
+    const lastMod = new Date(document.lastModified);
+    
+    // 組合出 YYYYMMDDHHmm 格式
+    const yyyy = lastMod.getFullYear();
+    const mm = String(lastMod.getMonth() + 1).padStart(2, '0');
+    const dd = String(lastMod.getDate()).padStart(2, '0');
+    const hh = String(lastMod.getHours()).padStart(2, '0');
+    const min = String(lastMod.getMinutes()).padStart(2, '0');
+    
+    // 更新到畫面上
+    versionTag.innerText = `Build ${yyyy}${mm}${dd}${hh}${min} (Auto)`;
+}
+
 // --- 將 UI 輔助函式掛載到全域，供 parser 產出的 HTML 字串使用 ---
 window.toggleDisplay = function(id) {
     const el = document.getElementById(id);
-    el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
 };
 
 window.copyToClipboard = async function(text, btnId) {
     try {
         await navigator.clipboard.writeText(text);
         const btn = document.getElementById(btnId);
-        btn.innerText = "已複製！";
-        btn.classList.add("success-copy");
-        setTimeout(() => { 
-            btn.innerText = "複製 URL"; 
-            btn.classList.remove("success-copy");
-        }, 2000);
+        if (btn) {
+            btn.innerText = "已複製！";
+            btn.classList.add("success-copy");
+            setTimeout(() => { 
+                btn.innerText = "複製 URL"; 
+                btn.classList.remove("success-copy");
+            }, 2000);
+        }
     } catch (e) {
         alert("複製失敗，請檢查瀏覽器權限。");
     }
@@ -73,5 +94,6 @@ mainBtn.addEventListener('click', async () => {
     }
 });
 
-// 啟動時自動載入選單
+// --- 系統啟動初始化 ---
+autoSetVersion();
 updateHistoryUI();
