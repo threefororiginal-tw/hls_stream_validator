@@ -4,76 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HLS Professional Inspector</title>
-    <style>
-        .version-tag { font-size: 11px; color: #aaa; text-align: right; font-family: monospace; padding-bottom: 5px; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; max-width: 1200px; margin: auto; background: #f4f7f9; color: #333; padding-bottom: 100px; /* 為頁尾留空間 */ }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; }
-        
-        /* 歷史選單與輸入區塊 */
-        .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .input-group { display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; }
-        input:focus { border-color: #007aff; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
-        button#mainBtn { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button#mainBtn:hover { background: #005bb5; }
-        
-        select#historySelect { padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; font-size: 13px; color: #555; width: 100%; cursor: pointer; outline: none; }
-
-        /* 表格與列表樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; background: white; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; vertical-align: top; font-size: 13px; }
-        th { background: #f8f9fa; width: 160px; color: #555; font-family: monospace; }
-
-        /* 互動式資料列 */
-        .item-row { padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; }
-        .item-row:hover { background: #e6f7ff; border-color: #bae7ff; }
-        .item-label { font-weight: bold; color: #c41d7f; margin-right: 10px; font-size: 14px; display: inline-block; min-width: 80px; }
-        .item-summary { color: #555; font-size: 13px; }
-        
-        /* URL 彈出區塊 (徹底防跑版) */
-        .url-container { display: none; margin-top: 10px; padding: 12px; background: #1e1e1e; color: #d4d4d4; border-radius: 6px; position: relative; animation: fadeIn 0.2s; }
-        .copy-btn { position: absolute; right: 8px; top: 8px; padding: 5px 10px; background: #007aff; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .copy-btn:hover { background: #005bb5; }
-        .copy-btn.success-copy { background: #52c41a; }
-        .url-text { font-family: monospace; font-size: 11px; word-break: break-all; white-space: pre-wrap; padding-right: 70px; display: block; line-height: 1.4; }
-
-        .clickable-box { background: #fff; border: 1px solid #ddd; border-left: 4px solid #007aff; padding: 10px; cursor: pointer; font-family: monospace; font-size: 12px; transition: 0.2s; border-radius: 4px; }
-        .clickable-box:hover { background: #f8fbff; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 固定頁尾 */
-        .footer { 
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(244, 247, 249, 0.95);
-            padding: 12px; border-top: 1px solid #ddd;
-            text-align: center; box-sizing: border-box;
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-        }
-        .footer p { margin: 0; font-size: 12px; color: #666; }
-        .footer-links { margin-top: 6px; font-size: 12px; }
-        .footer-links a { color: #007aff; text-decoration: none; margin: 0 10px; font-weight: bold; }
-        .footer-links a:hover { text-decoration: underline; }
-    </style>
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <div class="card">
-    <div class="version-tag">Build 202603301300 (Final Masterpiece)</div>
+    <div class="version-tag">Build 202603301300 (Modular)</div>
     <h2>HLS 階層式深度分析儀</h2>
     
     <div class="controls">
-        <select id="historySelect" onchange="useHistory()">
+        <select id="historySelect">
             <option value="">-- 先前測試紀錄 (保留 24 小時) --</option>
         </select>
         
         <div class="input-group">
             <input type="text" id="urlInput" placeholder="請貼上 Master 或 Media .m3u8 網址...">
-            <button id="mainBtn" onclick="startAnalysis()">執行技術分析</button>
+            <button id="mainBtn">執行技術分析</button>
         </div>
     </div>
 
@@ -81,7 +27,7 @@
 </div>
 
 <div class="footer">
-    <p><b>💡 專業觀點提醒：</b> 由於 HLS 涉及動態時戳與硬體解碼相容性，靜態檢查通過後，建議仍需參考 Apple 官方規範進行 `AVPlayer` 實機測試。</p>
+    <p><b>💡 專業觀點提醒：</b> 由於 HLS 涉及動態時戳與硬體解碼相容性，靜態檢查通過後，建議仍需參考 Apple 官方規範進行 <code>AVPlayer</code> 實機測試。</p>
     <div class="footer-links">
         📚 參考規範：
         <a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">1. HLS RFC 8216 (IETF)</a> | 
@@ -89,183 +35,6 @@
     </div>
 </div>
 
-<script>
-    const COOKIE_NAME = "hls_pro_history";
-
-    window.onload = function() { renderHistory(); };
-
-    function toggleDisplay(id) {
-        const el = document.getElementById(id);
-        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-    }
-
-    // --- Cookie 歷史紀錄模組 ---
-    function saveToHistory(url) {
-        let history = getHistory();
-        const now = new Date();
-        const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-        
-        history = history.filter(item => item.url !== url);
-        history.unshift({ time: timeStr, url: url });
-        if (history.length > 20) history.pop();
-        
-        const expires = new Date(Date.now() + 86400 * 1000).toUTCString();
-        document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(history))}; expires=${expires}; path=/; SameSite=Lax`;
-        renderHistory();
-    }
-
-    function getHistory() {
-        const name = COOKIE_NAME + "=";
-        const ca = document.cookie.split(';');
-        for(let i = 0; i < ca.length; i++) {
-            let c = ca[i].trim();
-            if (c.indexOf(name) === 0) return JSON.parse(decodeURIComponent(c.substring(name.length, c.length)));
-        }
-        return [];
-    }
-
-    function renderHistory() {
-        const select = document.getElementById("historySelect");
-        const history = getHistory();
-        select.innerHTML = '<option value="">-- 先前測試紀錄 (保留 24 小時) --</option>';
-        history.forEach(item => {
-            const option = document.createElement("option");
-            option.value = item.url;
-            option.text = `[${item.time}] ${item.url.substring(0, 80)}${item.url.length > 80 ? '...' : ''}`;
-            select.appendChild(option);
-        });
-    }
-
-    function useHistory() {
-        const select = document.getElementById("historySelect");
-        if (select.value) document.getElementById("urlInput").value = select.value;
-    }
-
-    // --- 複製模組 ---
-    async function copyToClipboard(text, btnId) {
-        try {
-            await navigator.clipboard.writeText(text);
-            const btn = document.getElementById(btnId);
-            btn.innerText = "已複製！";
-            btn.classList.add("success-copy");
-            setTimeout(() => { 
-                btn.innerText = "複製 URL"; 
-                btn.classList.remove("success-copy");
-            }, 2000);
-        } catch (e) {
-            alert("複製失敗，請檢查瀏覽器權限。");
-        }
-    }
-
-    // --- 核心解析模組 ---
-    async function startAnalysis() {
-        const url = document.getElementById('urlInput').value.trim();
-        const btn = document.getElementById('mainBtn');
-        const output = document.getElementById('mainOutput');
-        
-        if (!url) return alert("請輸入有效的 m3u8 網址");
-        
-        saveToHistory(url);
-        btn.disabled = true;
-        btn.innerText = "分析中...";
-        output.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>正在獲取並分析 Manifest 資料...</div>";
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`伺服器回應錯誤: ${response.status}`);
-            const text = await response.text();
-            const baseDir = url.substring(0, url.lastIndexOf("/") + 1);
-            let html = "";
-
-            // 1. 原始碼區塊 (防跑版預覽)
-            html += `<div class="section-title">1. 主 m3u8 原始碼</div>`;
-            html += `<div class="clickable-box" onclick="toggleDisplay('rawSrc')">▶ 點擊展開完整原始碼</div>`;
-            html += `<pre id="rawSrc" style="display:none; background:#1e1e1e; color:#d4d4d4; padding:15px; font-size:12px; white-space:pre-wrap; word-break:break-all; border-radius:8px; margin-top:10px; border:1px solid #333;">${text.replace(/</g,'&lt;')}</pre>`;
-
-            // 2. 結構化資訊分析
-            html += `<div class="section-title">2. 資源結構與資訊分析</div><table>`;
-            
-            const ver = text.match(/#EXT-X-VERSION:(\d+)/);
-            html += `<tr><th>#EXT-X-VERSION</th><td>版本：${ver ? ver[1] : '未宣告 (可能視為 v1)'}</td></tr>`;
-
-            // Media 拆解 (Audio / Subtitles)
-            const mediaLines = text.match(/#EXT-X-MEDIA:.*/g) || [];
-            let audioHtml = "", subHtml = "";
-            mediaLines.forEach((line, idx) => {
-                const type = line.match(/TYPE=([^,]*)/)?.[1];
-                const name = line.match(/NAME="([^"]*)"/)?.[1] || "未命名";
-                const lang = line.match(/LANGUAGE="([^"]*)"/)?.[1] || "未知語言";
-                const uri = line.match(/URI="([^"]*)"/)?.[1];
-                const fullUri = uri ? (uri.startsWith('http') ? uri : baseDir + uri) : null;
-                const icon = type === 'AUDIO' ? '🔊' : '💬';
-                
-                let item = `<div class="item-row" ${fullUri ? `onclick="toggleDisplay('m-${idx}')"` : ''}>
-                    ${icon} <span class="item-label">${name}</span> <span class="item-summary">[${lang}]</span>`;
-                
-                if (fullUri) {
-                    item += `<div id="m-${idx}" class="url-container" onclick="event.stopPropagation()">
-                                <button class="copy-btn" id="mb-${idx}" onclick="copyToClipboard('${fullUri}','mb-${idx}')">複製 URL</button>
-                                <span class="url-text">${fullUri}</span>
-                             </div>`;
-                } else {
-                    item += `<span style="font-size:11px; color:#999; margin-left:10px;">(封裝內含，無獨立 URL)</span>`;
-                }
-                item += `</div>`;
-
-                if (type === 'AUDIO') audioHtml += item;
-                if (type === 'SUBTITLES') subHtml += item;
-            });
-            
-            html += `<tr><th>#EXT-X-MEDIA<br><small style="color:#999; font-weight:normal;">(多語音與字幕)</small></th><td>
-                <div style="font-weight:bold; color:#005bb5; margin-bottom:5px;">音軌配置</div>${audioHtml || '<div style="font-size:12px; color:#888;">無獨立音軌</div>'}
-                <div style="font-weight:bold; color:#005bb5; margin-top:15px; margin-bottom:5px;">字幕配置</div>${subHtml || '<div style="font-size:12px; color:#888;">無獨立字幕</div>'}
-            </td></tr>`;
-
-            // Stream-INF 拆解 (Video Variants)
-            const streamMatches = text.matchAll(/#EXT-X-STREAM-INF:(.*?)\n(.*)/g);
-            let vHtml = "", vIdx = 0;
-            for (const m of streamMatches) {
-                const info = m[1];
-                const path = m[2].trim();
-                const res = info.match(/RESOLUTION=(\d+x\d+)/)?.[1] || "解析度未標示";
-                const bwMatch = info.match(/BANDWIDTH=(\d+)/);
-                const bw = bwMatch ? `${(parseInt(bwMatch[1])/1000000).toFixed(2)} Mbps` : "頻寬未標示";
-                const codecMatch = info.match(/CODECS="([^"]+)"/);
-                const codec = codecMatch ? codecMatch[1] : null;
-                
-                const fullPath = path.startsWith('http') ? path : baseDir + path;
-                
-                vHtml += `<div class="item-row" onclick="toggleDisplay('v-${vIdx}')">
-                    <span class="item-label">變體 ${vIdx+1}</span>
-                    <span class="item-summary">${res} | ${bw} ${codec ? `| ${codec.split(',')[0]}` : ''}</span>
-                    <div id="v-${vIdx}" class="url-container" onclick="event.stopPropagation()">
-                        <button class="copy-btn" id="vb-${vIdx}" onclick="copyToClipboard('${fullPath}','vb-${vIdx}')">複製 URL</button>
-                        <span class="url-text">${fullPath}</span>
-                    </div>
-                </div>`;
-                vIdx++;
-            }
-            html += `<tr><th>#EXT-X-STREAM-INF<br><small style="color:#999; font-weight:normal;">(影像自適應層級)</small></th><td>${vHtml || '<div style="font-size:12px; color:#888;">無多層級變體 (可能為 Media Playlist)</div>'}</td></tr></table>`;
-
-            // 3. 診斷報告
-            html += `<div class="section-title">3. 靜態語法診斷</div>`;
-            if (vIdx > 0 && !text.includes("CODECS")) {
-                html += `<div style="padding:12px; color:#856404; background:#fffbe6; border:1px solid #ffe58f; border-radius:6px; font-size:13px; margin-bottom:10px;">
-                    <b>⚠️ 效能優化建議：</b> Master Playlist 未宣告 CODECS 參數。補齊此參數可協助 iOS <code>AVPlayer</code> 提早配置硬體解碼資源，減少起播延遲。</div>`;
-            }
-            html += `<div style="padding:12px; color:#389e0d; background:#f6ffed; border:1px solid #b7eb8f; border-radius:6px; font-size:13px; font-weight:bold;">✓ 基礎語法與資源結構提取完成。</div>`;
-
-            output.innerHTML = html;
-        } catch (err) {
-            output.innerHTML = `<div style="padding:15px; color:#cf1322; background:#fff1f0; border:1px solid #ffa39e; border-radius:6px; margin-top:10px;">
-                <b>❌ 分析中斷：</b> ${err.message}<br><br>
-                1. 請確認網址是否有效。<br>
-                2. 確認目標伺服器 (CDN) 已正確設定 <b>CORS Header</b>，否則瀏覽器安全機制將攔截請求。</div>`;
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "執行技術分析";
-        }
-    }
-</script>
+<script type="module" src="./js/main.js"></script>
 </body>
 </html>
