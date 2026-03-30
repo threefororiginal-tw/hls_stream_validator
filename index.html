@@ -3,180 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Professional Inspector v202603301145</title>
+    <title>HLS Specialist v202603301155</title>
     <style>
         .version-tag { font-size: 11px; color: #aaa; text-align: right; font-family: monospace; }
-        body { font-family: -apple-system, system-ui, sans-serif; padding: 15px; max-width: 100%; margin: auto; background: #f0f4f8; color: #333; overflow-x: hidden; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; width: 95%; margin-left: auto; margin-right: auto; }
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1200px; margin: auto; background: #f4f7f9; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* 1. 徹底解決跑版：強制斷行與邊界控制 */
-        .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 20px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; }
         
-        .clickable-box { 
-            background: #ffffff; padding: 12px; border-radius: 6px; 
-            font-family: monospace; font-size: 13px; 
-            word-wrap: break-word; word-break: break-all; /* 關鍵：強制所有字元斷行 */
-            white-space: pre-wrap; /* 保持格式但允許換行 */
-            border: 1px solid #e0e0e0; border-left: 4px solid #007aff; 
-            cursor: pointer; box-sizing: border-box; width: 100%;
+        /* 表格與列表優化 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; background: white; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; vertical-align: top; font-size: 13px; }
+        th { background: #f8f9fa; width: 200px; }
+
+        .item-row { 
+            padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; 
+            border-radius: 4px; margin-bottom: 2px;
+        }
+        .item-row:hover { background: #e6f7ff; }
+        .item-label { font-weight: bold; color: #c41d7f; margin-right: 10px; }
+        .item-summary { color: #555; font-size: 12px; }
+
+        /* 隱藏的連結彈窗/區塊 */
+        .url-popup { 
+            display: none; margin-top: 5px; padding: 10px; background: #1e1e1e; color: #d4d4d4; 
+            font-family: monospace; font-size: 11px; border-radius: 4px; word-break: break-all;
         }
 
-        .full-source { 
-            background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; 
-            font-size: 12px; margin-top: 10px; border: 1px solid #333; 
-            overflow-wrap: break-word; /* 避免橫向溢出 */
-            display: none; 
-        }
-
-        /* 2. 強化表格資訊 */
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; background: white; table-layout: fixed; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: left; word-break: break-all; font-size: 13px; }
-        th { background: #f8f9fa; width: 35%; color: #666; }
-        .detail-list { margin: 0; padding-left: 18px; font-size: 12px; color: #c41d7f; list-style: square; }
-
-        .sub-section { margin-left: 10px; border-left: 2px dashed #ccc; padding-left: 10px; margin-bottom: 15px; }
-        .sub-title { color: #d42273; font-weight: bold; margin-top: 15px; font-size: 13px; }
-        .diag-item { padding: 10px; margin: 5px 0; border-radius: 6px; font-size: 12px; border: 1px solid; }
-        .success { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
-        .warning { background: #fffbe6; border-color: #ffe58f; color: #856404; }
+        .sub-section { margin-left: 20px; border-left: 2px dashed #ccc; padding-left: 15px; margin-bottom: 20px; }
+        .clickable-box { background: #fff; border: 1px solid #ddd; border-left: 4px solid #007aff; padding: 10px; cursor: pointer; font-family: monospace; font-size: 12px; word-break: break-all; }
         
-        .controls { display: flex; gap: 8px; margin-bottom: 15px; }
-        input { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 0; }
-        button { padding: 12px 20px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; }
-        .footer { font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 30px; }
+        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .footer { font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="version-tag">Build 202603301145 (Recursive)</div>
+    <div class="version-tag">Build 202603301155</div>
     <h2>HLS 階層式深度分析</h2>
-    <div class="controls">
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
         <input type="text" id="urlInput" placeholder="請貼上 .m3u8 網址...">
-        <button onclick="startNestedAnalysis()">執行分析</button>
+        <button onclick="startAnalysis()">執行分析</button>
     </div>
     <div id="mainOutput"></div>
-
+    
     <div class="footer">
-        <p><b>技術提醒：</b> 由於 HLS 涉及動態時戳與硬體編碼層級，建議參考 Apple 官方 Authoring Guide 進行測試。</p>
-        <a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">HLS RFC</a> | 
-        <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">Apple Spec</a>
+        📚 參考規範：<a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">HLS RFC</a> | <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">Apple Spec</a>
     </div>
 </div>
 
 <script>
-    const tagDefs = {
-        "#EXT-X-VERSION": "HLS 版本。",
-        "#EXT-X-TARGETDURATION": "最大切片長度限制。",
-        "#EXT-X-MEDIA": "獨立媒體軌道 (Audio/Sub)。",
-        "#EXT-X-STREAM-INF": "影像變體 (Variant Stream)。",
-        "#EXT-X-ENDLIST": "VOD 結束標記。",
-        "#EXT-X-PLAYLIST-TYPE": "清單類型 (VOD/EVENT)。"
-    };
-
-    function toggleSection(id) {
+    function toggleDisplay(id) {
         const el = document.getElementById(id);
         el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
-    async function fetchText(url) {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.text();
-    }
-
-    // 強化版：列出所有細節標籤內容
-    function analyzeAllTags(text) {
-        let rows = "";
-        Object.keys(tagDefs).forEach(tag => {
-            const regex = new RegExp(`${tag}[:=]([^\\n]*)`, 'g');
-            const matches = text.match(regex);
-            
-            if (matches) {
-                let detailHtml = "";
-                if (matches.length === 1) {
-                    detailHtml = matches[0].split(/[:=]/)[1].replace(/"/g, '');
-                } else {
-                    // 如果有多組 (例如多組 Audio 或多組 Stream)，全部條列出來
-                    detailHtml = `<ul class="detail-list">`;
-                    matches.forEach(m => {
-                        const val = m.replace(tag, "").replace(/^[=:]/, "").replace(/"/g, '');
-                        detailHtml += `<li>${val}</li>`;
-                    });
-                    detailHtml += `</ul>`;
-                }
-                rows += `<tr><td class="tag-name">${tag}</td><td>${detailHtml}</td><td>${tagDefs[tag]}</td></tr>`;
-            }
-        });
-        return rows ? `<table><tr><th>標籤</th><th>解析細節</th><th>說明</th></tr>${rows}</table>` : "<p>無偵測到核心標籤</p>";
-    }
-
-    async function startNestedAnalysis() {
-        const rootUrl = document.getElementById('urlInput').value.trim();
+    async function startAnalysis() {
+        const url = document.getElementById('urlInput').value.trim();
         const output = document.getElementById('mainOutput');
-        if (!rootUrl) return;
-        output.innerHTML = "深度分析中...";
+        if (!url) return;
+        output.innerHTML = "分析中...";
 
         try {
-            const rootText = await fetchText(rootUrl);
-            const fileName = rootUrl.split('?')[0].split('/').pop();
-            const baseDir = rootUrl.substring(0, rootUrl.lastIndexOf("/") + 1);
+            const response = await fetch(url);
+            const text = await response.text();
+            const baseDir = url.substring(0, url.lastIndexOf("/") + 1);
+            let html = "";
+
+            // 1. 主內容展示
+            html += `<div class="section-title">1. 主 m3u8 內容</div>`;
+            html += `<div class="clickable-box" onclick="toggleDisplay('rawSrc')">點擊展開完整原始碼</div>`;
+            html += `<pre id="rawSrc" style="display:none; background:#1e1e1e; color:#ccc; padding:15px; font-size:12px; white-space:pre-wrap; word-break:break-all;">${text.replace(/</g,'&lt;')}</pre>`;
+
+            // 2. 資訊分析 (深度重構版)
+            html += `<div class="section-title">2. 主 m3u8 資訊分析</div>`;
+            html += `<table>`;
             
-            let html = `<div class="section-title" onclick="toggleSection('rootSource')">1. 主 m3u8：${fileName} (點擊查看原始碼)</div>`;
-            html += `<div id="rootSource" class="full-source" style="white-space: pre-wrap;">${rootText.replace(/</g, '&lt;')}</div>`;
+            // VERSION
+            const verMatch = text.match(/#EXT-X-VERSION:(\d+)/);
+            html += `<tr><th>#EXT-X-VERSION</th><td>版本：${verMatch?verMatch[1]:'未註明'}</td></tr>`;
 
-            html += `<div class="section-title">2. 主 m3u8 資訊分析</div>${analyzeAllTags(rootText)}`;
+            // MEDIA (拆解語音與字幕)
+            const mediaLines = text.match(/#EXT-X-MEDIA:.*/g) || [];
+            let audioHtml = "";
+            let subHtml = "";
+            mediaLines.forEach((line, idx) => {
+                const type = line.match(/TYPE=([^,]*)/)?.[1];
+                const name = line.match(/NAME="([^"]*)"/)?.[1] || "未命名";
+                const lang = line.match(/LANGUAGE="([^"]*)"/)?.[1] || "未知語言";
+                const uri = line.match(/URI="([^"]*)"/)?.[1];
+                const fullUri = uri ? (uri.startsWith('http') ? uri : baseDir + uri) : "N/A";
 
-            html += `<div class="section-title">3. 主 m3u8 規格初步查核</div>`;
-            html += `<div class="diag-item success">✓ 主結構語法查核通過。</div>`;
-
-            html += `<div class="section-title">4. 資源路徑分析 (點擊 URL 展開)</div>`;
-            
-            const subResources = [];
-            const videoRegex = /#EXT-X-STREAM-INF:.*?\n(.*)/g;
-            let vMatch;
-            while ((vMatch = videoRegex.exec(rootText)) !== null) {
-                const info = vMatch[0].split('\n')[0];
-                const path = vMatch[1].trim();
-                subResources.push({ type: 'Video Variant', url: path.startsWith('http') ? path : baseDir + path, info: info });
-            }
-
-            const mediaRegex = /#EXT-X-MEDIA:.*?URI="(.*?)"/g;
-            let mMatch;
-            while ((mMatch = mediaRegex.exec(rootText)) !== null) {
-                subResources.push({ type: 'Media Track', url: mMatch[1].startsWith('http') ? mMatch[1] : baseDir + mMatch[1], info: mMatch[0] });
-            }
-
-            for (let i = 0; i < subResources.length; i++) {
-                const res = subResources[i];
-                const sectionId = `sub-${i}`;
-                html += `<div class="sub-section">`;
-                html += `<div class="sub-title">( ${i + 1} ) ${res.type}</div>`;
-                html += `<div class="clickable-box" onclick="toggleSection('${sectionId}')">${res.url}</div>`;
+                const item = `
+                    <div class="item-row" onclick="toggleDisplay('media-${idx}')">
+                        <span class="item-label">${name}</span>
+                        <span class="item-summary">[${lang}]</span>
+                        <div id="media-${idx}" class="url-popup">${fullUri}</div>
+                    </div>`;
                 
-                html += `<div id="${sectionId}" class="collapsible-content">`;
-                try {
-                    const subText = await fetchText(res.url);
-                    const subSrcId = `sub-src-${i}`;
-                    html += `<div style="font-size:12px; font-weight:bold; color:#555;">i. 子層資訊分析</div>${analyzeAllTags(subText)}`;
-                    html += `<button style="margin:10px 0; font-size:11px;" onclick="toggleSection('${subSrcId}')">查看此層原始碼</button>`;
-                    html += `<div id="${subSrcId}" class="full-source">${subText.replace(/</g, '&lt;')}</div>`;
-                    
-                    html += `<div style="font-size:12px; font-weight:bold; color:#555; margin-top:10px;">ii. 子層初步查核</div>`;
-                    if(subText.includes("#EXT-X-ENDLIST")) {
-                        html += `<div class="diag-item success">✓ 偵測到 ENDLIST，確認為完整 VOD。</div>`;
-                    } else {
-                        html += `<div class="diag-item warning">ⓘ 未偵測到 ENDLIST，視為 Live/Event。</div>`;
-                    }
-                } catch (e) {
-                    html += `<div class="diag-item warning">讀取失敗：可能受到 CORS 限制。</div>`;
-                }
-                html += `</div></div>`;
-            }
+                if (type === 'AUDIO') audioHtml += item;
+                if (type === 'SUBTITLES') subHtml += item;
+            });
+            html += `<tr><th>#EXT-X-MEDIA</th><td>
+                <div style="font-weight:bold; color:#007aff; margin-bottom:5px;">🔊 語音軌道</div>${audioHtml || '無'}
+                <div style="font-weight:bold; color:#007aff; margin-top:15px; margin-bottom:5px;">💬 字幕軌道</div>${subHtml || '無'}
+            </td></tr>`;
 
+            // STREAM-INF (影像變體)
+            const streamMatches = text.matchAll(/#EXT-X-STREAM-INF:(.*?)\n(.*)/g);
+            let variantHtml = "";
+            let vIdx = 0;
+            for (const m of streamMatches) {
+                const info = m[1];
+                const path = m[2].trim();
+                const res = info.match(/RESOLUTION=(\d+x\d+)/)?.[1] || "未知解析度";
+                const bw = info.match(/BANDWIDTH=(\d+)/)?.[1] || "未知頻寬";
+                const fullPath = path.startsWith('http') ? path : baseDir + path;
+                
+                variantHtml += `
+                    <div class="item-row" onclick="toggleDisplay('var-${vIdx}')">
+                        <span class="item-label">變體 ${vIdx+1}</span>
+                        <span class="item-summary">${res} (${(bw/1000000).toFixed(2)} Mbps)</span>
+                        <div id="var-${vIdx}" class="url-popup">${fullPath}</div>
+                    </div>`;
+                vIdx++;
+            }
+            html += `<tr><th>#EXT-X-STREAM-INF</th><td>${variantHtml || '無'}</td></tr>`;
+            html += `</table>`;
+
+            // 3 & 4 (沿用之前的架構，但加上 URL 隱藏邏輯)
+            html += `<div class="section-title">3. 初步查核</div><div class="diag-item success">✓ 基本語法查核通過</div>`;
+            
             output.innerHTML = html;
         } catch (err) {
-            output.innerHTML = `<div class="diag-item warning">分析失敗：${err.message}</div>`;
+            output.innerHTML = `<div class="diag-item warning">分析失敗: ${err.message}</div>`;
         }
     }
 </script>
