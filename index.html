@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Stream Analyzer</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 900px; margin: auto; background: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .report-item { padding: 12px; margin-bottom: 8px; border-radius: 6px; border-left: 5px solid #ccc; font-size: 14px; }
+        .success { background: #f6ffed; border-color: #52c41a; color: #389e0d; }
+        .error { background: #fff1f0; border-color: #ff4d4f; color: #cf1322; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Professional HLS Spec Checker</h2>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="urlInput" placeholder="貼上 .m3u8 網址進行分析...">
+            <button onclick="startAnalysis()">開始分析</button>
+        </div>
+        <div id="status" style="margin-top:20px;"></div>
+    </div>
+    <script>
+        async function startAnalysis() {
+            const url = document.getElementById('urlInput').value;
+            const status = document.getElementById('status');
+            if (!url) return alert("請輸入網址！");
+            status.innerHTML = "正在分析中...";
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                let reports = "<h3>分析報告：</h3>";
+                if (text.includes("#EXTM3U")) reports += '<div class="report-item success">✓ 偵測到標準 HLS (#EXTM3U)</div>';
+                else reports += '<div class="report-item error">✗ 非標準 HLS 格式</div>';
+                status.innerHTML = reports;
+            } catch (err) {
+                status.innerHTML = '<div class="report-item error"><b>無法分析！可能是 CORS 阻擋。</b><br>請確認串流伺服器已開啟 CORS。</div>';
+            }
+        }
+    </script>
+</body>
+</html>
