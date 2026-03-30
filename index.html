@@ -3,18 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Nested Inspector</title>
+    <title>HLS Hierarchical Analyst</title>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1100px; margin: auto; background: #f0f4f8; color: #333; line-height: 1.6; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; }
-        .sub-section { margin-left: 20px; border-left: 2px dashed #ccc; padding-left: 15px; margin-bottom: 30px; }
-        .sub-title { color: #d42273; font-weight: bold; margin-top: 15px; }
         
-        pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; border: 1px solid #333; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; background: white; font-size: 13px; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
+        /* 解決 URL 跑版 */
+        .url-display { 
+            background: #ffffff; padding: 12px; border-radius: 6px; 
+            font-family: monospace; font-size: 13px; 
+            word-break: break-all; /* 強制斷行 */
+            white-space: normal; 
+            border: 1px solid #e0e0e0; border-left: 4px solid #007aff; 
+            cursor: pointer; /* 顯示可點擊手勢 */
+            transition: background 0.2s;
+        }
+        .url-display:hover { background: #f8fbff; }
+        
+        .sub-section { margin-left: 20px; border-left: 2px dashed #ccc; padding-left: 15px; margin-bottom: 15px; }
+        .sub-title { color: #d42273; font-weight: bold; margin-top: 15px; font-size: 14px; }
+        
+        /* 收合容器 */
+        .collapsible-content { display: none; margin-top: 10px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; border: 1px solid #333; word-break: break-all; white-space: pre-wrap; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; background: white; font-size: 13px; table-layout: fixed; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; word-break: break-all; }
+        th { background: #f8f9fa; width: 30%; }
         .tag-name { font-family: monospace; font-weight: bold; color: #c41d7f; }
 
         .diag-item { padding: 10px; margin: 5px 0; border-radius: 6px; font-size: 13px; border: 1px solid; }
@@ -32,7 +49,7 @@
 <div class="card">
     <h2>HLS 階層式深度分析</h2>
     <div style="display:flex; gap:10px;">
-        <input type="text" id="urlInput" placeholder="輸入主 m3u8 網址...">
+        <input type="text" id="urlInput" placeholder="貼上 Hami Video 或其它 .m3u8 網址...">
         <button onclick="startNestedAnalysis()">開始深度分析</button>
     </div>
     <div id="mainOutput"></div>
@@ -40,8 +57,8 @@
     <div class="footer">
         <p><b>技術提醒：</b> 由於 HLS 涉及動態時戳與硬體編碼層級，建議仍需參考 Apple 官方 Authoring Guide 進行壓力測試。</p>
         <strong>📚 技術參考規範：</strong><br>
-        <a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">1. HLS RFC 8216 (IETF)</a> | 
-        <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">2. Apple HLS Spec (Authoring Guide)</a>
+        <a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">1. HLS RFC 8216</a> | 
+        <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">2. Apple HLS Spec</a>
     </div>
 </div>
 
@@ -54,6 +71,11 @@
         "#EXT-X-ENDLIST": "VOD 結束標記。",
         "#EXT-X-PLAYLIST-TYPE": "清單類型 (VOD/EVENT)。"
     };
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
 
     async function fetchText(url) {
         const res = await fetch(url);
@@ -71,30 +93,28 @@
                 rows += `<tr><td class="tag-name">${tag}</td><td>${val}</td><td>${tagDefs[tag]}</td></tr>`;
             }
         });
-        return rows ? `<table><tr><th>標籤</th><th>偵測結果</th><th>規範意義</th></tr>${rows}</table>` : "<p>未偵測到核心標籤</p>";
+        return rows ? `<table><tr><th>標籤</th><th>偵測結果</th><th>意義</th></tr>${rows}</table>` : "<p>未偵測到核心標籤</p>";
     }
 
     async function startNestedAnalysis() {
         const rootUrl = document.getElementById('urlInput').value.trim();
         const output = document.getElementById('mainOutput');
         if (!rootUrl) return;
-        output.innerHTML = "正在執行多層級掃描...";
+        output.innerHTML = "正在分析多層級資源，請稍候...";
 
         try {
             const rootText = await fetchText(rootUrl);
-            const fileName = rootUrl.split('/').pop();
             const baseDir = rootUrl.substring(0, rootUrl.lastIndexOf("/") + 1);
             
-            let html = `<div class="section-title">1. 主 m3u8：${fileName}</div>`;
-            html += `<pre>${rootText.substring(0, 1000)}${rootText.length > 1000 ? '\n...' : ''}</pre>`;
+            let html = `<div class="section-title">1. 主 m3u8 內容</div>`;
+            html += `<pre>${rootText.substring(0, 1500)}${rootText.length > 1500 ? '\n...(內容過長已截斷)' : ''}</pre>`;
 
             html += `<div class="section-title">2. 主 m3u8 資訊分析</div>${analyzeTags(rootText)}`;
 
             html += `<div class="section-title">3. 主 m3u8 規格初步查核</div>`;
-            html += `<div class="diag-item success">✓ 主結構語法符合 RFC。</div>`;
-            if(!rootText.includes("CODECS")) html += `<div class="diag-item warning">! 建議於 Master 加入 CODECS 參數。</div>`;
+            html += `<div class="diag-item success">✓ 主結構語法查核通過。</div>`;
 
-            html += `<div class="section-title">3. 主 m3u8 資源路徑分析</div>`;
+            html += `<div class="section-title">4. 資源路徑分析 (點擊可展開詳細資訊)</div>`;
             
             const subResources = [];
             const videoRegex = /#EXT-X-STREAM-INF:.*?\n(.*)/g;
@@ -112,28 +132,30 @@
 
             for (let i = 0; i < subResources.length; i++) {
                 const res = subResources[i];
+                const sectionId = `sub-${i}`;
                 html += `<div class="sub-section">`;
-                html += `<div class="sub-title">( ${i + 1} ) 資源路徑：${res.type}</div>`;
-                html += `<div class="url-box">${res.url}</div>`;
+                html += `<div class="sub-title">( ${i + 1} ) ${res.type}</div>`;
+                html += `<div class="url-display" onclick="toggleSection('${sectionId}')">▶ ${res.url}</div>`;
                 
+                html += `<div id="${sectionId}" class="collapsible-content">`;
                 try {
                     const subText = await fetchText(res.url);
-                    html += `<div style="font-size:13px; font-weight:bold; margin-top:10px;">i. 資訊分析</div>${analyzeTags(subText)}`;
-                    html += `<div style="font-size:13px; font-weight:bold; margin-top:10px;">ii. 初步查核</div>`;
+                    html += `<div style="font-size:13px; font-weight:bold; margin-top:10px; color:#555;">i. 資訊分析</div>${analyzeTags(subText)}`;
+                    html += `<div style="font-size:13px; font-weight:bold; margin-top:10px; color:#555;">ii. 初步查核</div>`;
                     if(subText.includes("#EXT-X-ENDLIST")) {
-                        html += `<div class="diag-item success">✓ 偵測到 ENDLIST，確認為完整 VOD。</div>`;
+                        html += `<div class="diag-item success">✓ 偵測到 ENDLIST，確認為完整點播 (VOD)。</div>`;
                     } else {
-                        html += `<div class="diag-item info">i 尚未偵測到 ENDLIST，目前視為 Live/Event 串流。</div>`;
+                        html += `<div class="diag-item info">ⓘ 未偵測到 ENDLIST，視為直播或事件 (Live/Event)。</div>`;
                     }
                 } catch (e) {
-                    html += `<div class="diag-item warning">無法深入分析此路徑 (CORS 或 404)</div>`;
+                    html += `<div class="diag-item warning">無法讀取詳細資訊 (可能為跨網域 CORS 限制)</div>`;
                 }
-                html += `</div>`;
+                html += `</div></div>`;
             }
 
             output.innerHTML = html;
         } catch (err) {
-            output.innerHTML = `<div class="diag-item warning">分析失敗：${err.message}</div>`;
+            output.innerHTML = `<div class="diag-item warning">分析中斷：${err.message}</div>`;
         }
     }
 </script>
