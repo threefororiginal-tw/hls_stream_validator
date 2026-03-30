@@ -3,135 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Master/Media Analyst</title>
+    <title>HLS Master/Media Analyst Pro</title>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1100px; margin: auto; background: #f0f4f8; color: #333; line-height: 1.6; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .section-title { border-left: 5px solid #007aff; padding-left: 15px; margin-top: 30px; color: #005bb5; background: #eef6ff; padding-top: 8px; padding-bottom: 8px; font-weight: bold; }
-        pre { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; border: 1px solid #333; }
-        .url-box { background: #ffffff; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; word-break: break-all; margin-bottom: 5px; border: 1px solid #e0e0e0; border-left: 4px solid #007aff; }
+        h2 { color: #007aff; border-bottom: 2px solid #007aff; padding-bottom: 10px; }
+        input { width: 75%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+        button { padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #005bb5; }
         
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 14px; }
-        th { background-color: #f8f9fa; color: #555; }
+        /* 區塊標題 */
+        .section-title { border-left: 5px solid #007aff; padding-left: 15px; margin-top: 35px; color: #005bb5; background: #eef6ff; padding-top: 10px; padding-bottom: 10px; font-weight: bold; }
+        
+        /* 原始碼區塊 */
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; border: 1px solid #333; max-height: 500px; }
+        
+        /* 路徑方塊 */
+        .url-box { background: #ffffff; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; word-break: break-all; margin-bottom: 8px; border: 1px solid #e0e0e0; border-left: 4px solid #007aff; }
+        .url-box b { color: #005bb5; }
+        .url-box small { color: #666; display: block; margin-top: 4px; }
+
+        /* 分析表格 */
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #555; font-weight: bold; }
         .tag-name { font-family: monospace; font-weight: bold; color: #c41d7f; }
-        
-        .diagnostic-item { padding: 15px; margin: 10px 0; border-radius: 8px; font-size: 14px; }
-        .success { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; border: 1px solid; }
-        .info { background: #e6f7ff; border-color: #91d5ff; color: #0050b3; border: 1px solid; }
-        
+
+        /* 診斷樣式 */
+        .diag-item { padding: 15px; margin: 10px 0; border-radius: 8px; font-size: 14px; border: 1px solid; }
+        .success { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
+        .info { background: #e6f7ff; border-color: #91d5ff; color: #0050b3; }
+        .warning { background: #fffbe6; border-color: #ffe58f; color: #856404; }
+
         /* 頁尾連結 */
-        .footer-links { margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc; font-size: 14px; }
-        .footer-links a { color: #007aff; text-decoration: none; margin-right: 20px; }
-        .footer-links a:hover { text-decoration: underline; }
+        .footer { margin-top: 50px; padding: 20px; border-top: 1px solid #ddd; font-size: 13px; color: #666; }
+        .footer a { color: #007aff; text-decoration: none; margin-right: 15px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>HLS 串流規格深度分析儀</h2>
+        <h2>HLS 串流規格深度分析儀 (Professional)</h2>
+        <p style="font-size: 14px; color: #666;">針對 iOS/tvOS 優化之 Manifest 預檢工具</p>
         <div style="display:flex; gap:10px;">
             <input type="text" id="urlInput" placeholder="請貼上 Master 或 Media .m3u8 網址...">
-            <button onclick="runAnalysis()">執行技術分析</button>
+            <button onclick="runAnalysis()">執行分析</button>
         </div>
+        
         <div id="mainOutput"></div>
 
-        <div class="footer-links">
-            <strong>📚 技術參考規範：</strong>
+        <div class="footer">
+            <strong>📚 技術參考規範：</strong><br>
             <a href="https://datatracker.ietf.org/doc/html/rfc8216" target="_blank">1. HLS RFC 8216 (IETF)</a>
-            <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">2. Apple HLS Spec (Authoring Guide)</a>
+            <a href="https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices" target="_blank">2. Apple HLS Authoring Spec</a>
         </div>
     </div>
 
     <script>
         async function runAnalysis() {
-            const baseUrl = document.getElementById('urlInput').value;
+            const baseUrl = document.getElementById('urlInput').value.trim();
             const output = document.getElementById('mainOutput');
             if (!baseUrl) return alert("請輸入網址");
 
-            output.innerHTML = "<p>正在抓取內容並執行深度分析...</p>";
+            output.innerHTML = "<p>正在下載並分析內容中...</p>";
             
             try {
                 const response = await fetch(baseUrl);
+                if (!response.ok) throw new Error(`HTTP 錯誤: ${response.status}`);
                 const text = await response.text();
                 const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf("/") + 1);
                 let html = "";
 
-                // 1. 原始內容
-                html += `<h3 class="section-title">1. 完整 Manifest 原始碼 (Full Source)</h3><pre>${text.replace(/</g, '&lt;')}</pre>`;
+                // --- 1. 原始內容 (不截斷) ---
+                html += `<h3 class="section-title">1. 完整 Manifest 原始碼</h3><pre>${text.replace(/</g, '&lt;')}</pre>`;
 
-                // 2. 資源路徑分析
+                // --- 2. 資源路徑分析 (支援多組偵測) ---
                 html += `<h3 class="section-title">2. 資源路徑分析 (Resource Paths)</h3>`;
+                
                 if (text.includes("#EXT-X-STREAM-INF")) {
-                    const videoLines = text.matchAll(/#EXT-X-STREAM-INF:.*?\n(.*)/g);
-                    for (const m of videoLines) {
-                        const path = m[1].trim();
+                    html += "<h4>[Video Variant Streams]</h4>";
+                    const videoRegex = /#EXT-X-STREAM-INF:(.*?)\n(.*)/g;
+                    let vMatch;
+                    while ((vMatch = videoRegex.exec(text)) !== null) {
+                        const info = vMatch[1];
+                        const path = vMatch[2].trim();
                         const full = path.startsWith('http') ? path : baseDir + path;
-                        html += `<div class="url-box"><b>[Video Variant URL]:</b> ${full}</div>`;
+                        html += `<div class="url-box"><b>Video:</b> ${full}<br><small>Info: ${info}</small></div>`;
                     }
-                    const mediaLines = text.matchAll(/#EXT-X-MEDIA:.*?URI="(.*?)"/g);
-                    for (const m of mediaLines) {
-                        const path = m[1].trim();
+
+                    html += "<h4>[Media Tracks (Audio/Subtitles/I-Frame)]</h4>";
+                    const mediaRegex = /#EXT-X-MEDIA:(.*?URI="(.*?)".*)/g;
+                    let mMatch;
+                    let mediaCount = 0;
+                    while ((mMatch = mediaRegex.exec(text)) !== null) {
+                        const info = mMatch[1];
+                        const path = mMatch[2];
                         const full = path.startsWith('http') ? path : baseDir + path;
-                        html += `<div class="url-box"><b>[Audio/Sub URL]:</b> ${full}</div>`;
+                        html += `<div class="url-box"><b>Media:</b> ${full}<br><small>Info: ${info}</small></div>`;
+                        mediaCount++;
                     }
+                    if(mediaCount === 0) html += "<p style='font-size:12px; color:#888;'>此主清單無獨立音軌/字幕軌標籤。</p>";
                 } else {
-                    const segs = text.matchAll(/#EXTINF:.*?\n(.*)/g);
-                    let count = 0;
-                    for (const m of segs) {
-                        if (count++ < 10) {
-                            const path = m[1].trim();
+                    html += "<h4>[Media Segments (TS/fMP4)]</h4>";
+                    const segRegex = /#EXTINF:.*?\n(.*)/g;
+                    let sMatch;
+                    let sCount = 0;
+                    while ((sMatch = segRegex.exec(text)) !== null) {
+                        if (sCount < 10) {
+                            const path = sMatch[1].trim();
                             const full = path.startsWith('http') ? path : baseDir + path;
-                            html += `<div class="url-box"><b>[Segment URL]:</b> ${full}</div>`;
+                            html += `<div class="url-box"><b>Segment:</b> ${full}</div>`;
                         }
+                        sCount++;
                     }
-                    if (count > 10) html += `<p style="font-size:12px; color:#666;">(其餘 ${count-10} 個切片路徑略過顯示)</p>`;
+                    if (sCount > 10) html += `<p style="font-size:12px; color:#666;">...共有 ${sCount} 個切片，僅顯示前 10 個。</p>`;
                 }
 
-                // 3. 資訊分析 (Tag 深度解析)
+                // --- 3. 資訊分析 (Tag 深度字典) ---
                 html += `<h3 class="section-title">3. 資訊分析 (Tag Dictionary)</h3>`;
-                html += `<table><tr><th>標籤 (Tag)</th><th>解析內容</th><th>HLS 規範意義</th></tr>`;
+                html += `<table><tr><th>標籤 (Tag)</th><th>偵測結果</th><th>規格與意義說明</th></tr>`;
                 
                 const tagDict = [
-                    { t: "#EXT-X-VERSION", d: "定義 HLS 協議版本。iOS 建議 Version 3+ 確保最佳相容性。" },
-                    { t: "#EXT-X-TARGETDURATION", d: "最大切片秒數。規範要求所有實際切片長度不得超過此值。" },
-                    { t: "#EXT-X-PLAYLIST-TYPE", d: "播放類型：VOD (點播) 或 EVENT (直播中途保留歷史)。" },
-                    { t: "#EXT-X-MEDIA:TYPE=AUDIO", d: "獨立音軌。定義語言 (LANGUAGE) 與發音名稱 (NAME)。" },
-                    { t: "#EXT-X-STREAM-INF", d: "影像變體。定義解析度 (RESOLUTION)、頻寬 (BANDWIDTH) 與編碼 (CODECS)。" },
-                    { t: "#EXT-X-INDEPENDENT-SEGMENTS", d: "宣告每個切片皆可獨立解碼 (無參考前片)，加速 Seek 隨機跳轉。" },
-                    { t: "#EXT-X-ENDLIST", d: "標誌 VOD 結束。若無此標籤，播放器會將其視為直播 (Live)。" }
+                    { t: "#EXT-X-VERSION", d: "定義 HLS 版本。版本越高功能越多，iOS 常用 v3 或 v6。" },
+                    { t: "#EXT-X-TARGETDURATION", d: "切片最大時長限值。所有切片皆不得超過此秒數。" },
+                    { t: "#EXT-X-PLAYLIST-TYPE", d: "清單性質：VOD 為點播，EVENT 為可回看之直播。" },
+                    { t: "#EXT-X-MEDIA:TYPE=AUDIO", d: "獨立音軌宣告。用於多國語言、備份音軌或環繞音效。" },
+                    { t: "#EXT-X-STREAM-INF", d: "影像變體宣告。包含頻寬、編碼 (CODECS) 與解析度。" },
+                    { t: "#EXT-X-INDEPENDENT-SEGMENTS", d: "宣告每個切片皆可獨立解碼，無需前切片，有助於精準 Seek。" },
+                    { t: "#EXT-X-ENDLIST", d: "VOD 結束標誌。若無此標籤，播放器將其視為 Live 並在末端等待新切片。" }
                 ];
 
                 tagDict.forEach(item => {
-                    if (text.includes(item.t)) {
-                        let val = "標籤已偵測";
-                        const reg = new RegExp(`${item.t}[:=]([^\\n,]*)`);
-                        const match = text.match(reg);
-                        if (match) val = match[1].replace(/"/g, '');
-                        
-                        // 深度解析音軌
-                        if (item.t.includes("AUDIO")) {
-                            const lang = text.match(/LANGUAGE="([^"]*)"/);
-                            const name = text.match(/NAME="([^"]*)"/);
-                            val = `音軌: ${name?name[1]:'未命名'}, 語系: ${lang?lang[1]:'未設定'}`;
+                    const regex = new RegExp(item.t, 'g');
+                    const occurrences = (text.match(regex) || []).length;
+                    if (occurrences > 0) {
+                        let resultText = `偵測到 ${occurrences} 組`;
+                        if (occurrences === 1) {
+                            const valReg = new RegExp(`${item.t}[:=]([^\\n,]*)`);
+                            const m = text.match(valReg);
+                            if (m) resultText = m[1].replace(/"/g, '');
                         }
-                        html += `<tr><td class="tag-name">${item.t}</td><td>${val}</td><td>${item.d}</td></tr>`;
+                        // 針對音軌特別顯示語言與名稱
+                        if (item.t.includes("AUDIO") && occurrences > 0) {
+                            const langMatch = text.match(/LANGUAGE="([^"]*)"/);
+                            const nameMatch = text.match(/NAME="([^"]*)"/);
+                            resultText += ` (例 - 語言: ${langMatch?langMatch[1]:'未定義'}, 名稱: ${nameMatch?nameMatch[1]:'未定義'})`;
+                        }
+                        html += `<tr><td class="tag-name">${item.t}</td><td>${resultText}</td><td>${item.d}</td></tr>`;
                     }
                 });
                 html += `</table>`;
 
-                // 4. 初步觀測
-                html += `<h3 class="section-title">4. 規格初步查核</h3>`;
-                html += `<div class="diagnostic-item success">✓ 靜態文本校驗完成。目前 Manifest 結構文字符合基礎 RFC 規範。</div>`;
-                html += `<div class="diagnostic-item info">💡 <b>技術提醒：</b> 由於 HLS 涉及動態時戳與硬體編碼層級，建議仍需參考 Apple 官方 Authoring Guide 進行壓力測試。</div>`;
+                // --- 4. 溫和觀測報告 ---
+                html += `<h3 class="section-title">4. 規格初步觀測</h3>`;
+                html += `<div class="diag-item success">✓ 靜態文本校驗完成。Manifest 結構與標籤符合 HLS 基本通訊規範。</div>`;
+                
+                // 自動化建議
+                if (!text.includes("CODECS")) {
+                    html += `<div class="diag-item warning"><b>技術建議：</b> 未偵測到 CODECS 參數。建議在 Master Playlist 加入此項，以優化 iOS 播放器之解碼資源分配。</div>`;
+                }
+
+                html += `
+                    <div class="diag-item info">
+                        <b>💡 專業觀點提醒：</b><br>
+                        目前的分析僅針對 Manifest 文本進行「靜態語法預檢」。由於 HLS 涉及動態時戳同步 (A/V Sync) 及硬體解碼相容性，
+                        若遇到播放斷裂或黑畫面，仍需搭配 Apple 官方 <b>mediastreamvalidator</b> 進行深度封裝層級校驗。
+                    </div>`;
 
                 output.innerHTML = html;
 
             } catch (err) {
-                output.innerHTML = `<div class="diagnostic-item" style="color:red; background:#fff1f0; border:1px solid #ffa39e;">分析中斷：${err.message}<br><br>請確認網址正確且串流伺服器已開啟 <b>CORS</b> 權限。</div>`;
+                output.innerHTML = `<div class="diag-item" style="background:#fff1f0; border-color:#ffa39e; color:#cf1322;">
+                    <b>分析中斷：</b> ${err.message}<br><br>
+                    請確認輸入網址正確，且該伺服器已開啟 <b>CORS (Cross-Origin Resource Sharing)</b> 權限，否則瀏覽器會基於安全考量攔截請求。
+                </div>`;
             }
         }
     </script>
