@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HLS Hierarchical Analyst v202603301124</title>
+    <title>HLS Hierarchical Analyst v202603301135</title>
     <style>
-        /* 版本號標籤樣式 */
         .version-tag { font-size: 12px; color: #999; text-align: right; margin-bottom: 10px; font-family: monospace; }
-        
         body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; max-width: 1100px; margin: auto; background: #f0f4f8; color: #333; line-height: 1.6; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* 解決 URL 跑版的核心 CSS */
-        .url-display { 
+        .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-title:hover { background: #e6f2ff; }
+
+        /* 通用的 URL 與原始碼方塊樣式 */
+        .clickable-box { 
             background: #ffffff; padding: 12px; border-radius: 6px; 
             font-family: monospace; font-size: 13px; 
-            word-break: break-all; /* 強制長字元斷行 */
-            white-space: pre-wrap; /* 保留空白但允許換行 */
+            word-break: break-all; white-space: pre-wrap;
             border: 1px solid #e0e0e0; border-left: 4px solid #007aff; 
-            cursor: pointer; position: relative;
-            transition: background 0.2s;
+            cursor: pointer; position: relative; transition: background 0.2s;
         }
-        .url-display:hover { background: #f8fbff; }
-        .url-display::after { content: ' ▼'; font-size: 10px; color: #007aff; float: right; }
+        .clickable-box:hover { background: #f8fbff; }
+        .clickable-box::after { content: ' ▼'; font-size: 10px; color: #007aff; }
 
-        .section-title { border-left: 5px solid #007aff; padding: 8px 15px; margin: 25px 0 10px; color: #005bb5; background: #eef6ff; font-weight: bold; }
         .sub-section { margin-left: 20px; border-left: 2px dashed #ccc; padding-left: 15px; margin-bottom: 15px; }
         .sub-title { color: #d42273; font-weight: bold; margin-top: 15px; font-size: 14px; }
         
-        /* 收合動畫 */
-        .collapsible-content { display: none; margin-top: 10px; overflow: hidden; border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+        /* 收合容器 */
+        .collapsible-content { display: none; margin-top: 10px; border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+        
+        /* 原始碼專用預覽樣式 */
+        .full-source { background: #1e1e1e !important; color: #d4d4d4 !important; border: 1px solid #333 !important; }
 
-        pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px; font-size: 12px; overflow-x: auto; border: 1px solid #333; word-break: break-all; white-space: pre-wrap; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; background: white; font-size: 13px; table-layout: fixed; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; word-break: break-all; }
         th { background: #f8f9fa; width: 30%; color: #666; }
@@ -50,10 +50,10 @@
 <body>
 
 <div class="card">
-    <div class="version-tag">版本 202603301124</div>
+    <div class="version-tag">版本 202603301135</div>
     <h2>HLS 階層式深度分析儀</h2>
     <div style="display:flex; gap:10px;">
-        <input type="text" id="urlInput" placeholder="貼上 Master 或 Media .m3u8 網址...">
+        <input type="text" id="urlInput" placeholder="貼上 m3u8 網址...">
         <button onclick="startNestedAnalysis()">開始技術分析</button>
     </div>
     <div id="mainOutput"></div>
@@ -78,8 +78,7 @@
 
     function toggleSection(id) {
         const el = document.getElementById(id);
-        const isVisible = el.style.display === 'block';
-        el.style.display = isVisible ? 'none' : 'block';
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
     async function fetchText(url) {
@@ -105,7 +104,7 @@
         const rootUrl = document.getElementById('urlInput').value.trim();
         const output = document.getElementById('mainOutput');
         if (!rootUrl) return;
-        output.innerHTML = "深度分析中，這可能需要幾秒鐘...";
+        output.innerHTML = "深度分析中...";
 
         try {
             const rootText = await fetchText(rootUrl);
@@ -113,7 +112,9 @@
             const baseDir = rootUrl.substring(0, rootUrl.lastIndexOf("/") + 1);
             
             let html = `<div class="section-title">1. 主 m3u8：${fileName}</div>`;
-            html += `<pre>${rootText.substring(0, 1000)}${rootText.length > 1000 ? '\n...(內容過長，原始碼已截斷)' : ''}</pre>`;
+            // 修改點：主原始碼也改成可點擊展開，且 100% 呈現
+            html += `<div class="clickable-box" onclick="toggleSection('rootSource')">點擊展開完整原始碼內容</div>`;
+            html += `<div id="rootSource" class="collapsible-content full-source" style="display:none; font-family:monospace; white-space:pre-wrap;">${rootText.replace(/</g, '&lt;')}</div>`;
 
             html += `<div class="section-title">2. 主 m3u8 資訊分析</div>${analyzeTags(rootText)}`;
 
@@ -141,20 +142,25 @@
                 const sectionId = `sub-${i}`;
                 html += `<div class="sub-section">`;
                 html += `<div class="sub-title">( ${i + 1} ) ${res.type}</div>`;
-                html += `<div class="url-display" onclick="toggleSection('${sectionId}')">${res.url}</div>`;
+                html += `<div class="clickable-box" onclick="toggleSection('${sectionId}')">${res.url}</div>`;
                 
                 html += `<div id="${sectionId}" class="collapsible-content">`;
                 try {
                     const subText = await fetchText(res.url);
+                    // 子層原始碼也提供一個查看按鈕
+                    const subSourceId = `sub-src-${i}`;
                     html += `<div style="font-size:12px; font-weight:bold; color:#555; margin-bottom:5px;">i. 子層資訊分析</div>${analyzeTags(subText)}`;
-                    html += `<div style="font-size:12px; font-weight:bold; color:#555; margin-top:10px; margin-bottom:5px;">ii. 子層初步查核</div>`;
+                    html += `<button style="padding:5px 10px; font-size:11px; margin-top:5px;" onclick="toggleSection('${subSourceId}')">查看子層原始碼</button>`;
+                    html += `<div id="${subSourceId}" class="collapsible-content full-source" style="display:none; font-family:monospace; white-space:pre-wrap; margin-top:10px;">${subText.replace(/</g, '&lt;')}</div>`;
+
+                    html += `<div style="font-size:12px; font-weight:bold; color:#555; margin-top:15px; margin-bottom:5px;">ii. 子層初步查核</div>`;
                     if(subText.includes("#EXT-X-ENDLIST")) {
                         html += `<div class="diag-item success">✓ 偵測到 ENDLIST，確認為完整 VOD。</div>`;
                     } else {
                         html += `<div class="diag-item info">ⓘ 未偵測到 ENDLIST，視為 Live/Event。</div>`;
                     }
                 } catch (e) {
-                    html += `<div class="diag-item warning">無法深入分析此路徑 (CORS 限制或網址失效)</div>`;
+                    html += `<div class="diag-item warning">無法深入分析此路徑 (可能受 CORS 限制)</div>`;
                 }
                 html += `</div></div>`;
             }
